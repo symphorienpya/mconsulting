@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "schema.sql": "plaintext"
+},
+"editor.wordWrap": "on"
+}

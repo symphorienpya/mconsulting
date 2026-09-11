@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mconsulting Sarl | DRC </title>
+  <meta name="description" content="MConsulting Sarl accompagne les entrepreneurs et les porteurs de projets en RDC et a l'international.">
+  <link rel="icon" type="image/png" href="/assets/mconculting.png">
+  <link rel="apple-touch-icon" href="/assets/mconculting.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-supabase="<%= hasSupabase %>">
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="Mconsulting accueil"><img src="/assets/mconculting.png" alt="Mconsulting - Les intérêts partagés"></a>
+    <nav class="nav-links" aria-label="Navigation principale">
+      <a href="#process">À propos</a>
+      <a href="#work">Nos services</a>
+      <a href="#work">Mconsulting Academy</a>
+      <a href="#work">Réalisations</a>
+      <a href="#live">Contact</a>
+    </nav>
+    <button class="button button-dark open-request" type="button">◯ &nbsp; Demander un devis</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy reveal">
+        <p class="eyebrow"><span class="signal"></span> Conseil, audit & accompagnement</p>
+        <h1>Donnez la  forme à<br><em>vos projets.</em></h1>
+        <p class="hero-intro">MConsulting Sarl transforme vos ambitions en démarches claires, conformes et durables, en RDC comme à l'international.</p>
+        <div class="hero-actions">
+          <button class="button button-accent open-request" type="button">Soumettre une demande <span>↗</span></button>
+          <a class="text-link" href="#work">Voir nos domaines <span>↓</span></a>
+        </div>
+      </div>
+      <div class="hero-art reveal reveal-delay" aria-label="Jeune équipe africaine travaillant dans un bureau">
+        <div class="hero-art-overlay"></div><div class="art-label">MCONSULTING / 2026</div><div class="hero-facts"><div><strong>9</strong><small>DOMAINES D'EXPERTISE</small></div><div><strong>RCCM · ID Nat · NIF</strong><small>DÉMARCHES MAÎTRISÉES</small></div><div><strong>Kinshasa</strong><small>PRÉSENCE LOCALE, RDC</small></div><div><strong>Academy</strong><small>FORMATIONS CERTIFIANTES</small></div></div>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="Domaines d'intervention"><div>ENTREPRENEURIAT</div><span>✳</span><div>AUDIT & FISCALITÉ</div><span>✳</span><div>FORMATION</div><span>✳</span><div>IMMOBILIER</div><span>✳</span><div>PROJETS</div></section>
+
+    <section class="section intro-section" id="process">
+      <div class="section-kicker">01 / Notre mission</div>
+      <div class="intro-grid"><h2>Des décisions solides<br><span>pour avancer.</span></h2><div><p class="large-copy">Nous accompagnons les entrepreneurs, les institutions et les porteurs de projets dans leurs démarches administratives, financières et stratégiques, avec une expertise de proximité et une vision internationale.</p><a class="text-link" href="#live">Suivre les demandes en direct <span>↗</span></a></div></div>
+    </section>
+
+    <section class="section work-section" id="work">
+      <div class="section-heading"><div class="section-kicker">02 / Nos domaines d'expertise</div><a class="text-link" href="#live">Demander un accompagnement <span>↗</span></a></div>
+      <div class="work-grid">
+        <article class="project project-wide"><div class="project-image project-lattice"><span>01</span><div class="lattice-lines"></div><strong>Projets</strong></div><div class="project-meta"><h3>Création & marchés</h3><p>Entreprises / Offres / Obtention de marchés</p><span>01</span></div></article>
+        <article class="project"><div class="project-image project-arc"><span>02</span><div class="arc-shape"></div><strong>Expertise</strong></div><div class="project-meta"><h3>Audit & fiscalité</h3><p>Audit institutionnel / Conseils stratégiques</p><span>02</span></div></article>
+        <article class="project"><div class="project-image project-pulse"><span>03</span><div class="pulse-line"></div><strong>Transmission</strong></div><div class="project-meta"><h3>Formations & immobilier</h3><p>Certificats / Gestion de biens / Valorisation</p><span>03</span></div></article>
+      </div>
+    </section>
+
+    <section class="section live-section" id="live">
+        <div class="live-header"><div><div class="section-kicker">03 / Le bureau en direct</div><h2>Votre demande,<br><span>suivie en temps réel.</span></h2></div><div class="live-status"><i></i><span id="connection-label"><%= hasSupabase ? 'Temps réel connecté' : 'Mode démonstration' %></span></div></div>
+          <div class="live-layout"><div class="live-copy"><p>Chaque mission commence par une demande. Recevez une réponse et suivez l'avancement des dossiers depuis notre bureau en direct.</p><button class="button button-light open-request" type="button">Déposer une demande <span>↗</span></button><a class="button button-whatsapp" href="https://wa.me/243837180403?text=Bonjour%20MConsulting%2C%20je%20souhaite%20parler%20de%20mon%20projet." target="_blank" rel="noopener noreferrer">WhatsApp <span>↗</span></a></div><div class="request-feed" id="request-feed"><% requests.forEach(function(request) { %><div class="request-row" data-request-id="<%= request.id %>"><div class="request-icon"><%= request.name.charAt(0) %></div><div class="request-detail"><strong><%= request.name %> <small><%= request.company %></small></strong><span><%= request.service %> · <%= request.budget %></span></div><div class="request-state"><b><%= request.status %></b><time data-time="<%= request.created_at %>"></time></div></div><% }) %></div></div>
+    </section>
+
+    <section class="closing"><p class="eyebrow">Un projet à concrétiser ?</p><h2>Construisons<br><em>la prochaine étape.</em></h2><button class="button button-accent open-request" type="button">Parler à un conseiller <span>↗</span></button></section>
+  </main>
+
+  <footer><div class="footer-topline"><span>MCONSULTING SARL</span><span>Une présence locale, une vision internationale.</span></div><div class="footer-brand"><a class="wordmark" href="/" aria-label="Mconsulting accueil"></a><p>Les intérêts partagés.<br>Les projets qui avancent.</p></div><div class="footer-column"><strong>Explorer</strong><a href="#process">À propos</a><a href="#work">Nos services</a><a href="#work">Réalisations</a><a href="#live">Contact</a></div><div class="footer-column"><strong>Parlons de votre projet</strong><a href="mailto:contact@mconsulting.cd">contact@mconsulting.cd</a><a href="https://wa.me/243837180403?text=Bonjour%20MConsulting%2C%20je%20souhaite%20parler%20de%20mon%20projet." target="_blank" rel="noopener noreferrer">WhatsApp : +243 837 180 403 <span>↗</span></a><a href="#live">Déposer une demande <span>↗</span></a><span>Kinshasa, RDC</span></div><div class="footer-column footer-meta"><strong>Suivre</strong><a href="#live">Bureau en direct <i></i></a><a href="/admin">Espace admin</a><span>© 2026 Consulting Sarl</span></div><div class="footer-bottom"><span>RCCM · ID NAT · NIF</span><span>Conseil · Audit · Formation · Immobilier</span><span>RDC / INTL.</span></div></footer>
+
+  <dialog class="request-modal" id="request-modal"><div class="modal-top"><span class="eyebrow">Nouvelle demande</span><button class="close-modal" type="button" aria-label="Fermer le formulaire">×</button></div><h2>Parlez-nous de<br><em>votre projet.</em></h2><form id="request-form"><div class="form-row"><label>Nom <input name="name" required placeholder="Votre nom"></label><label>Email <input type="email" name="email" required placeholder="vous@entreprise.com"></label></div><div class="form-row"><label>Entreprise <input name="company" placeholder="Entreprise ou projet"></label><label>Votre besoin <select name="service" required><option value="" selected disabled>Choisir un domaine</option><option>Accompagnement entrepreneurial</option><option>Audit et conseils fiscaux</option><option>Formation professionnelle</option><option>Gestion immobilière</option><option>Offres et marchés</option></select></label></div><label>Budget indicatif <select name="budget"><option>À discuter</option><option>Moins de 2 000 $</option><option>2 000 $ - 5 000 $</option><option>5 000 $ - 10 000 $</option><option>Plus de 10 000 $</option></select></label><label>Votre demande <textarea name="message" rows="3" placeholder="Décrivez brièvement votre besoin."></textarea></label><button class="button button-dark submit-button" type="submit">Envoyer la demande <span>↗</span></button><p class="form-message" id="form-message" role="status"></p></form></dialog>
+  <div class="toast" id="toast" role="status"><span>✳</span><div><strong>Nouvelle demande reçue</strong><small>Un nouveau dossier vient d'arriver.</small></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.MCONSULTING_CONFIG = { supabaseUrl: '<%= process.env.SUPABASE_URL || "" %>', supabaseKey: '<%= process.env.SUPABASE_ANON_KEY || "" %>' };</script><script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration | Mconsulting</title>
+  <link rel="icon" type="image/png" href="/assets/mconculting.png">
+  <link rel="stylesheet" href="/admin.css">
+  <style>.activity-panel{margin-top:18px;border:1px solid var(--line);background:#e9e8e0}.activity-heading{display:grid;grid-template-columns:1.5fr 2fr 1fr;padding:13px 18px;color:var(--muted);font:9px var(--mono);text-transform:uppercase;border-bottom:1px solid var(--line)}.activity-item{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}.activity-mark{display:grid;place-items:center;width:24px;height:24px;background:var(--acid);color:var(--ink);font-weight:700}.activity-item strong,.activity-item small{display:block}.activity-item small,.activity-item time{color:var(--muted);font-size:11px}@media(max-width:850px){.activity-heading{display:none}.activity-item{grid-template-columns:28px 1fr}.activity-item time{grid-column:2}}</style>
+</head>
+<body data-authenticated="<%= isAdmin %>" data-realtime="<%= hasSupabase %>">
+  <main class="admin-shell">
+    <header class="admin-header"><a href="/" class="brand"><img src="/assets/mconculting.png" alt="Mconsulting"></a><div class="header-right"><span class="live-indicator"><i></i><span id="connection-label"><%= hasSupabase ? 'Supabase connecté' : 'Mode local' %></span></span><button class="logout-button" id="logout-button" type="button">Déconnexion</button></div></header>
+
+    <section class="login-panel" id="login-panel"><div class="login-mark">M</div><p class="overline">Espace sécurisé</p><h1>Bienvenue au<br><em>bureau.</em></h1><p>Connectez-vous pour gérer les demandes reçues et suivre l'activité en direct.</p><form id="login-form"><label>Mot de passe administrateur<input type="password" name="password" required autocomplete="current-password" placeholder="Votre mot de passe"></label><button class="primary-button" type="submit">Ouvrir le bureau <span>↗</span></button><p class="form-error" id="login-error"></p></form></section>
+
+    <section class="dashboard" id="dashboard" hidden><div class="dashboard-intro"><div><p class="overline">Administration / Demandes</p><h1>Le bureau<br><em>en direct.</em></h1></div><div class="dashboard-date" id="dashboard-date"></div></div>
+      <div class="stats-grid"><div class="stat-card"><span>Demandes reçues</span><strong id="total-count">0</strong><small>tous dossiers</small></div><div class="stat-card accent"><span>Nouvelles demandes</span><strong id="new-count">0</strong><small>à traiter</small></div><div class="stat-card"><span>En cours</span><strong id="progress-count">0</strong><small>missions actives</small></div><div class="stat-card dark"><span>Connexion</span><strong id="realtime-state">LIVE</strong><small>mise à jour automatique</small></div></div>
+      <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="search-input" type="search" placeholder="Rechercher une demande..."></div><select id="status-filter" aria-label="Filtrer par statut"><option value="all">Tous les statuts</option><option>Nouvelle demande</option><option>En découverte</option><option>Proposition envoyée</option><option>En cours</option><option>Terminée</option></select></div>
+      <div class="requests-layout"><div class="table-wrap"><div class="table-heading"><span>Dossier</span><span>Besoin</span><span>Statut</span><span>Reçu</span></div><div id="request-list" class="request-list"></div><div class="empty-state" id="empty-state" hidden>Aucune demande ne correspond à votre recherche.</div></div><aside class="detail-panel" id="detail-panel"><div class="detail-empty"><span>✳</span><p>Sélectionnez un dossier<br>pour voir ses détails.</p></div></aside></div>
+      <section class="activity-panel"><div class="activity-heading"><span>Activité récente</span><span>Événement</span><span>Date</span></div><div id="activity-list" class="activity-list"></div><div class="empty-state" id="activity-empty" hidden>Aucune activité enregistrée.</div></section>
+    </section>
+  </main>
+  <div class="admin-toast" id="admin-toast"><strong>Nouvelle demande</strong><span>Un dossier vient d'arriver en temps réel.</span></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.MCONSULTING_CONFIG = { supabaseUrl: '<%= process.env.SUPABASE_URL || "" %>', supabaseKey: '<%= process.env.SUPABASE_ANON_KEY || "" %>' };</script><script src="/admin.js"></script>
+</body>
+</html>

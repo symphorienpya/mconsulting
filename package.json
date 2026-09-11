@@ -1,0 +1,16 @@
+{
+  "name": "mconsulting",
+  "version": "1.0.0",
+  "description": "Mconsulting sarl",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}
