@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const hasSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY !== 'your-anon-key');
 const supabase = hasSupabase
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
@@ -176,8 +176,8 @@ async function startServer() {
     requestsTableReady = !error;
     databaseStatus = error ? `Supabase connected, table error: ${error.message}` : 'Supabase connected and requests table ready';
   }
-  app.listen(port, () => {
-    console.log(`Mconsulting is live at http://localhost:${port}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`MConsulting server running on port ${PORT}`);
     console.log(`Database: ${databaseStatus}`);
     console.log(`Realtime: ${requestsTableReady ? 'enabled for requests table' : 'disabled until requests table is ready'}`);
   });
