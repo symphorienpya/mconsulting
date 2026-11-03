@@ -18,9 +18,33 @@ create table if not exists public.activities (
   created_at timestamptz default now()
 );
 
+create table if not exists public.contacts (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  company text,
+  email text,
+  phone text,
+  role text,
+  notes text,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.projects (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  client text,
+  category text,
+  status text not null default 'Planifié',
+  progress integer not null default 0 check (progress between 0 and 100),
+  description text,
+  created_at timestamptz default now()
+);
+
 create index if not exists requests_created_at_idx on public.requests (created_at desc);
 create index if not exists activities_created_at_idx on public.activities (created_at desc);
 create index if not exists activities_request_id_idx on public.activities (request_id);
+create index if not exists contacts_created_at_idx on public.contacts (created_at desc);
+create index if not exists projects_created_at_idx on public.projects (created_at desc);
 
 insert into public.activities (request_id, type, description, created_at)
 select r.id, 'booking_created', 'Demande existante importée dans l''historique', r.created_at
@@ -72,6 +96,16 @@ begin
   ) then
     alter publication supabase_realtime add table public.requests;
   end if;
+end $$;
+
+alter table public.contacts enable row level security;
+alter table public.projects enable row level security;
+
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and tablename='contacts') then alter publication supabase_realtime add table public.contacts; end if;
+end $$;
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and tablename='projects') then alter publication supabase_realtime add table public.projects; end if;
 end $$;
 
 notify pgrst, 'reload schema';

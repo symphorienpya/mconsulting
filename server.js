@@ -27,6 +27,8 @@ const localRequests = [
   { id: 'MC-2399', name: 'Maya Chen', company: 'Immo Horizon', service: 'Gestion immobilière', budget: '2 000 $ - 5 000 $', status: 'Nouvelle demande', created_at: new Date(Date.now() - 1000 * 60 * 140).toISOString() }
 ];
 const localActivities = localRequests.map((request) => ({ id: crypto.randomUUID(), request_id: request.id, type: 'booking_created', description: `Nouvelle demande de ${request.name}`, created_at: request.created_at }));
+const localContacts = [];
+const localProjects = [{ id: 'P-001', title: 'Accompagnement entrepreneurial', client: 'MConsulting', category: 'Conseil', status: 'En cours', progress: 65, description: 'Accompagnement de porteurs de projets vers une structure opérationnelle.', created_at: new Date().toISOString() }];
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -108,6 +110,66 @@ app.get('/api/admin/activities', requireAdmin, async (req, res) => {
   res.json({ activities: localActivities.slice(0, 50), realtime: false });
 });
 
+app.post('/api/admin/requests/bulk-status', requireAdmin, async (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : [];
+  const status = req.body.status;
+  const allowedStatuses = ['Nouvelle demande', 'En découverte', 'Proposition envoyée', 'En cours', 'Terminée'];
+  if (!ids.length) return res.status(400).json({ error: 'Sélectionnez au moins une demande.' });
+  if (!allowedStatuses.includes(status)) return res.status(400).json({ error: 'Statut invalide.' });
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('requests').update({ status }).in('id', ids);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    localRequests.filter((item) => ids.includes(item.id)).forEach((item) => { item.status = status; });
+  }
+  await recordActivity({ type: 'bulk_status_updated', description: `${ids.length} demande(s) déplacée(s) vers « ${status} »` });
+  res.json({ ok: true, count: ids.length });
+});
+
+app.post('/api/admin/requests/bulk-delete', requireAdmin, async (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : [];
+  if (!ids.length) return res.status(400).json({ error: 'Sélectionnez au moins une demande.' });
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('requests').delete().in('id', ids);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    for (let index = localRequests.length - 1; index >= 0; index -= 1) if (ids.includes(localRequests[index].id)) localRequests.splice(index, 1);
+  }
+  await recordActivity({ type: 'bulk_request_deleted', description: `${ids.length} demande(s) supprimée(s)` });
+  res.json({ ok: true, count: ids.length });
+});
+
+app.post('/api/admin/projects/:id/duplicate', requireAdmin, async (req, res) => {
+  const source = adminSupabase
+    ? (await adminSupabase.from('projects').select('*').eq('id', req.params.id).single()).data
+    : localProjects.find((item) => item.id === req.params.id);
+  if (!source) return res.status(404).json({ error: 'Projet introuvable.' });
+  const payload = { title: `${source.title} - copie`, client: source.client, category: source.category, status: 'Planifié', progress: 0, description: source.description, created_at: new Date().toISOString() };
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('projects').insert(payload).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'project_duplicated', description: `Projet dupliqué : ${data.title}` });
+    return res.status(201).json({ project: data });
+  }
+  const project = { id: crypto.randomUUID(), ...payload };
+  localProjects.unshift(project);
+  await recordActivity({ type: 'project_duplicated', description: `Projet dupliqué : ${project.title}` });
+  res.status(201).json({ project });
+});
+
+app.delete('/api/admin/requests/:id', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('requests').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    const index = localRequests.findIndex((item) => item.id === req.params.id);
+    if (index < 0) return res.status(404).json({ error: 'Demande introuvable.' });
+    localRequests.splice(index, 1);
+  }
+  await recordActivity({ type: 'request_deleted', description: `Demande supprimée : ${req.params.id}` });
+  res.json({ ok: true });
+});
+
 app.patch('/api/admin/requests/:id', requireAdmin, async (req, res) => {
   const allowedStatuses = ['Nouvelle demande', 'En découverte', 'Proposition envoyée', 'En cours', 'Terminée'];
   if (!allowedStatuses.includes(req.body.status)) return res.status(400).json({ error: 'Statut invalide.' });
@@ -157,6 +219,161 @@ app.get('/api/requests', async (req, res) => {
     return res.json({ requests: data, realtime: true });
   }
   res.json({ requests: localRequests, realtime: false });
+});
+
+app.get('/api/admin/contacts', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('contacts').select('*').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    return res.json({ contacts: data });
+  }
+  res.json({ contacts: localContacts });
+});
+
+app.post('/api/admin/contacts', requireAdmin, async (req, res) => {
+  const { name, company = '', email = '', phone = '', role = '', notes = '' } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Le nom du contact est requis.' });
+  if (adminSupabase) {
+    const payload = { name: name.trim(), company, email, phone, role, notes, created_at: new Date().toISOString() };
+    const { data, error } = await adminSupabase.from('contacts').insert(payload).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'contact_created', description: `Contact ajouté : ${data.name}` });
+    return res.status(201).json({ contact: data });
+  }
+  const contact = { id: crypto.randomUUID(), name: name.trim(), company, email, phone, role, notes, created_at: new Date().toISOString() };
+  localContacts.unshift(contact);
+  await recordActivity({ type: 'contact_created', description: `Contact ajouté : ${contact.name}` });
+  res.status(201).json({ contact });
+});
+
+app.delete('/api/admin/contacts/:id', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('contacts').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    const index = localContacts.findIndex((item) => item.id === req.params.id);
+    if (index < 0) return res.status(404).json({ error: 'Contact introuvable.' });
+    localContacts.splice(index, 1);
+  }
+  await recordActivity({ type: 'contact_deleted', description: 'Contact supprimé' });
+  res.json({ ok: true });
+});
+
+app.patch('/api/admin/contacts/:id', requireAdmin, async (req, res) => {
+  const { name, company = '', email = '', phone = '', role = '', notes = '' } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Le nom du contact est requis.' });
+  const payload = { name: name.trim(), company, email, phone, role, notes };
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('contacts').update(payload).eq('id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'contact_updated', description: `Contact modifié : ${data.name}` });
+    return res.json({ contact: data });
+  }
+  const contact = localContacts.find((item) => item.id === req.params.id);
+  if (!contact) return res.status(404).json({ error: 'Contact introuvable.' });
+  Object.assign(contact, payload);
+  await recordActivity({ type: 'contact_updated', description: `Contact modifié : ${contact.name}` });
+  res.json({ contact });
+});
+
+app.get('/api/admin/projects', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('projects').select('*').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    return res.json({ projects: data });
+  }
+  res.json({ projects: localProjects });
+});
+
+app.post('/api/admin/projects', requireAdmin, async (req, res) => {
+  const { title, client = '', category = '', status = 'Planifié', progress = 0, description = '' } = req.body;
+  if (!title?.trim()) return res.status(400).json({ error: 'Le titre du projet est requis.' });
+  const safeProgress = Math.max(0, Math.min(100, Number(progress) || 0));
+  if (adminSupabase) {
+    const payload = { title: title.trim(), client, category, status, progress: safeProgress, description, created_at: new Date().toISOString() };
+    const { data, error } = await adminSupabase.from('projects').insert(payload).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'project_created', description: `Projet créé : ${data.title}` });
+    return res.status(201).json({ project: data });
+  }
+  const project = { id: crypto.randomUUID(), title: title.trim(), client, category, status, progress: safeProgress, description, created_at: new Date().toISOString() };
+  localProjects.unshift(project);
+  await recordActivity({ type: 'project_created', description: `Projet créé : ${project.title}` });
+  res.status(201).json({ project });
+});
+
+app.patch('/api/admin/projects/:id', requireAdmin, async (req, res) => {
+  const { title, client = '', category = '', status = 'Planifié', progress = 0, description = '' } = req.body;
+  const payload = { title: title?.trim(), client, category, status, progress: Math.max(0, Math.min(100, Number(progress) || 0)), description };
+  if (!payload.title) return res.status(400).json({ error: 'Le titre du projet est requis.' });
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('projects').update(payload).eq('id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'project_updated', description: `Projet mis à jour : ${data.title}` });
+    return res.json({ project: data });
+  }
+  const project = localProjects.find((item) => item.id === req.params.id);
+  if (!project) return res.status(404).json({ error: 'Projet introuvable.' });
+  Object.assign(project, payload);
+  await recordActivity({ type: 'project_updated', description: `Projet mis à jour : ${project.title}` });
+  res.json({ project });
+});
+
+app.delete('/api/admin/projects/:id', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('projects').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    const index = localProjects.findIndex((item) => item.id === req.params.id);
+    if (index < 0) return res.status(404).json({ error: 'Projet introuvable.' });
+    localProjects.splice(index, 1);
+  }
+  await recordActivity({ type: 'project_deleted', description: 'Projet supprimé' });
+  res.json({ ok: true });
+});
+
+app.get('/api/projects', async (req, res) => {
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('projects').select('id,title,client,category,status,progress,description,created_at').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    return res.json({ projects: data });
+  }
+  res.json({ projects: localProjects });
+});
+
+function csvValue(value) {
+  let text = value == null ? '' : String(value);
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function sendCsv(res, filename, columns, rows) {
+  const lines = [columns.map((column) => csvValue(column.label)).join(','), ...rows.map((row) => columns.map((column) => csvValue(row[column.key])).join(','))];
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(`\ufeff${lines.join('\r\n')}`);
+}
+
+app.get('/api/admin/export/:type', requireAdmin, async (req, res) => {
+  const type = req.params.type;
+  const definitions = {
+    requests: { table: 'requests', columns: [['id', 'ID'], ['name', 'Nom'], ['company', 'Organisation'], ['email', 'Email'], ['service', 'Besoin'], ['budget', 'Budget'], ['status', 'Statut'], ['message', 'Message'], ['created_at', 'Créé le']] },
+    contacts: { table: 'contacts', columns: [['id', 'ID'], ['name', 'Nom'], ['company', 'Organisation'], ['email', 'Email'], ['phone', 'Téléphone'], ['role', 'Fonction'], ['notes', 'Notes'], ['created_at', 'Créé le']] },
+    projects: { table: 'projects', columns: [['id', 'ID'], ['title', 'Titre'], ['client', 'Client'], ['category', 'Catégorie'], ['status', 'Statut'], ['progress', 'Avancement'], ['description', 'Description'], ['created_at', 'Créé le']] },
+    activities: { table: 'activities', columns: [['id', 'ID'], ['type', 'Type'], ['description', 'Description'], ['request_id', 'Référence'], ['created_at', 'Créé le']] }
+  };
+  const definition = definitions[type];
+  if (!definition) return res.status(400).json({ error: 'Type d’export invalide.' });
+  let rows = [];
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from(definition.table).select('*').order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    rows = data || [];
+  } else {
+    rows = ({ requests: localRequests, contacts: localContacts, projects: localProjects, activities: localActivities })[type] || [];
+  }
+  const columns = definition.columns.map(([key, label]) => ({ key, label }));
+  sendCsv(res, `mconsulting-${type}-${new Date().toISOString().slice(0, 10)}.csv`, columns, rows);
 });
 
 app.get('/api/health', async (req, res) => {
