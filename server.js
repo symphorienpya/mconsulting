@@ -29,6 +29,7 @@ const localRequests = [
 const localActivities = localRequests.map((request) => ({ id: crypto.randomUUID(), request_id: request.id, type: 'booking_created', description: `Nouvelle demande de ${request.name}`, created_at: request.created_at }));
 const localContacts = [];
 const localProjects = [{ id: 'P-001', title: 'Accompagnement entrepreneurial', client: 'MConsulting', category: 'Conseil', status: 'En cours', progress: 65, description: 'Accompagnement de porteurs de projets vers une structure opérationnelle.', created_at: new Date().toISOString() }];
+const localAppointments = [];
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -354,10 +355,68 @@ function sendCsv(res, filename, columns, rows) {
   res.send(`\ufeff${lines.join('\r\n')}`);
 }
 
+app.post('/api/appointments', async (req, res) => {
+  const { name, email, phone, company = '', service, appointment_date, appointment_time, mode = 'Présentiel', message = '' } = req.body;
+  if (!name || !email || !phone || !service || !appointment_date || !appointment_time) {
+    return res.status(400).json({ error: 'Nom, email, téléphone, service, date et heure sont requis.' });
+  }
+  const payload = { name, email, phone, company, service, appointment_date, appointment_time, mode, message, status: 'Nouvelle demande', created_at: new Date().toISOString() };
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('appointments').insert(payload).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'appointment_created', description: `Rendez-vous demandé par ${data.name}` });
+    return res.status(201).json({ appointment: data });
+  }
+  const appointment = { id: crypto.randomUUID(), ...payload };
+  localAppointments.unshift(appointment);
+  await recordActivity({ type: 'appointment_created', description: `Rendez-vous demandé par ${appointment.name}` });
+  res.status(201).json({ appointment });
+});
+
+app.get('/api/admin/appointments', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('appointments').select('*').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true });
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    return res.json({ appointments: data });
+  }
+  res.json({ appointments: localAppointments });
+});
+
+app.patch('/api/admin/appointments/:id', requireAdmin, async (req, res) => {
+  const allowedStatuses = ['Nouvelle demande', 'Confirmé', 'Replanifié', 'Terminé', 'Annulé'];
+  if (!allowedStatuses.includes(req.body.status)) return res.status(400).json({ error: 'Statut invalide.' });
+  const payload = { status: req.body.status, admin_notes: req.body.admin_notes || '' };
+  if (adminSupabase) {
+    const { data, error } = await adminSupabase.from('appointments').update(payload).eq('id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+    await recordActivity({ type: 'appointment_updated', description: `Rendez-vous ${data.status.toLowerCase()} : ${data.name}` });
+    return res.json({ appointment: data });
+  }
+  const appointment = localAppointments.find((item) => item.id === req.params.id);
+  if (!appointment) return res.status(404).json({ error: 'Rendez-vous introuvable.' });
+  Object.assign(appointment, payload);
+  await recordActivity({ type: 'appointment_updated', description: `Rendez-vous ${appointment.status.toLowerCase()} : ${appointment.name}` });
+  res.json({ appointment });
+});
+
+app.delete('/api/admin/appointments/:id', requireAdmin, async (req, res) => {
+  if (adminSupabase) {
+    const { error } = await adminSupabase.from('appointments').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: supabaseError(error) });
+  } else {
+    const index = localAppointments.findIndex((item) => item.id === req.params.id);
+    if (index < 0) return res.status(404).json({ error: 'Rendez-vous introuvable.' });
+    localAppointments.splice(index, 1);
+  }
+  await recordActivity({ type: 'appointment_deleted', description: 'Rendez-vous supprimé' });
+  res.json({ ok: true });
+});
+
 app.get('/api/admin/export/:type', requireAdmin, async (req, res) => {
   const type = req.params.type;
   const definitions = {
     requests: { table: 'requests', columns: [['id', 'ID'], ['name', 'Nom'], ['company', 'Organisation'], ['email', 'Email'], ['service', 'Besoin'], ['budget', 'Budget'], ['status', 'Statut'], ['message', 'Message'], ['created_at', 'Créé le']] },
+    appointments: { table: 'appointments', columns: [['id', 'ID'], ['name', 'Nom'], ['email', 'Email'], ['phone', 'Téléphone'], ['company', 'Organisation'], ['service', 'Service'], ['appointment_date', 'Date'], ['appointment_time', 'Heure'], ['mode', 'Mode'], ['status', 'Statut'], ['message', 'Message'], ['admin_notes', 'Notes admin'], ['created_at', 'Créé le']] },
     contacts: { table: 'contacts', columns: [['id', 'ID'], ['name', 'Nom'], ['company', 'Organisation'], ['email', 'Email'], ['phone', 'Téléphone'], ['role', 'Fonction'], ['notes', 'Notes'], ['created_at', 'Créé le']] },
     projects: { table: 'projects', columns: [['id', 'ID'], ['title', 'Titre'], ['client', 'Client'], ['category', 'Catégorie'], ['status', 'Statut'], ['progress', 'Avancement'], ['description', 'Description'], ['created_at', 'Créé le']] },
     activities: { table: 'activities', columns: [['id', 'ID'], ['type', 'Type'], ['description', 'Description'], ['request_id', 'Référence'], ['created_at', 'Créé le']] }
@@ -370,7 +429,7 @@ app.get('/api/admin/export/:type', requireAdmin, async (req, res) => {
     if (error) return res.status(500).json({ error: supabaseError(error) });
     rows = data || [];
   } else {
-    rows = ({ requests: localRequests, contacts: localContacts, projects: localProjects, activities: localActivities })[type] || [];
+    rows = ({ requests: localRequests, contacts: localContacts, projects: localProjects, appointments: localAppointments, activities: localActivities })[type] || [];
   }
   const columns = definition.columns.map(([key, label]) => ({ key, label }));
   sendCsv(res, `mconsulting-${type}-${new Date().toISOString().slice(0, 10)}.csv`, columns, rows);

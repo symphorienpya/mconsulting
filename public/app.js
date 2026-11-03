@@ -2,6 +2,8 @@ const modal = document.querySelector('#request-modal');
 const form = document.querySelector('#request-form');
 const feed = document.querySelector('#request-feed');
 const toast = document.querySelector('#toast');
+const appointmentModal = document.querySelector('#appointment-modal');
+const appointmentForm = document.querySelector('#appointment-form');
 const formatter = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
 const heroSlides = Array.from(document.querySelectorAll('[data-hero-slide]'));
 const heroDots = Array.from(document.querySelectorAll('[data-hero-index]'));
@@ -53,6 +55,26 @@ function relativeTime(value) {
 
 document.querySelectorAll('[data-time]').forEach((time) => { time.textContent = relativeTime(time.dataset.time); });
 document.querySelectorAll('.open-request').forEach((button) => button.addEventListener('click', () => modal.showModal()));
+document.querySelectorAll('.open-appointment').forEach((button) => button.addEventListener('click', () => appointmentModal.showModal()));
+document.querySelector('.close-appointment').addEventListener('click', () => appointmentModal.close());
+appointmentModal.addEventListener('click', (event) => { if (event.target === appointmentModal) appointmentModal.close(); });
+const appointmentDateInput = appointmentForm.querySelector('[name="appointment_date"]');
+appointmentDateInput.min = new Date().toISOString().slice(0, 10);
+appointmentForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = appointmentForm.querySelector('button[type="submit"]');
+  const message = document.querySelector('#appointment-message');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(appointmentForm))) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(errorMessage(result.error));
+    appointmentForm.reset();
+    message.textContent = 'Rendez-vous demandé. MConsulting vous confirmera par téléphone ou email.';
+    message.className = 'form-message success';
+  } catch (error) { message.textContent = errorMessage(error); message.className = 'form-message error'; }
+  button.disabled = false;
+});
 document.querySelector('.close-modal').addEventListener('click', () => modal.close());
 modal.addEventListener('click', (event) => { if (event.target === modal) modal.close(); });
 
