@@ -45,6 +45,33 @@ create table if not exists public.appointments (
   created_at timestamptz default now()
 );
 
+-- Existing databases may not contain the columns added after appointments was created.
+alter table public.appointments add column if not exists phone text;
+alter table public.appointments add column if not exists company text;
+alter table public.appointments add column if not exists service text;
+alter table public.appointments add column if not exists appointment_date date;
+alter table public.appointments add column if not exists appointment_time time;
+alter table public.appointments add column if not exists mode text default 'Présentiel';
+alter table public.appointments add column if not exists message text;
+alter table public.appointments add column if not exists status text default 'Nouvelle demande';
+alter table public.appointments add column if not exists admin_notes text;
+
+update public.appointments set appointment_time = time '09:00' where appointment_time is null;
+update public.appointments set appointment_date = current_date where appointment_date is null;
+update public.appointments set mode = 'Présentiel' where mode is null;
+update public.appointments set status = 'Nouvelle demande' where status is null;
+update public.appointments set phone = '' where phone is null;
+update public.appointments set service = 'Consultation entrepreneuriale' where service is null;
+
+alter table public.appointments alter column phone set not null;
+alter table public.appointments alter column service set not null;
+alter table public.appointments alter column appointment_date set not null;
+alter table public.appointments alter column appointment_time set not null;
+alter table public.appointments alter column mode set default 'Présentiel';
+alter table public.appointments alter column mode set not null;
+alter table public.appointments alter column status set default 'Nouvelle demande';
+alter table public.appointments alter column status set not null;
+
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   title text not null,
