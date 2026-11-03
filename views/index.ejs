@@ -122,8 +122,9 @@
       </div>
       <div class="domain-grid">
         <article class="domain-card">
-          <div class="domain-image">
-            <img src="https://images.pexels.com/photos/30688593/pexels-photo-30688593/free-photo-of-casual-office-meeting-in-lagos-nigeria.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1000" alt="Équipe professionnelle en réunion à Lagos" loading="lazy">
+          <div class="domain-image domain-image-entrepreneurship" role="img" aria-label="Entrepreneuriat et développement">
+            <div class="domain-icon-ring"></div>
+            <i class="domain-icon" data-lucide="briefcase-business" aria-hidden="true"></i>
             <span class="domain-number">01</span>
             <span class="domain-image-label">Entreprendre & développer</span>
           </div>
@@ -134,8 +135,9 @@
           </div>
         </article>
         <article class="domain-card">
-          <div class="domain-image">
-            <img src="https://images.pexels.com/photos/7993903/pexels-photo-7993903.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1000" alt="Professionnels africains examinant des documents ensemble" loading="lazy">
+          <div class="domain-image domain-image-audit" role="img" aria-label="Audit et fiscalité">
+            <div class="domain-icon-ring"></div>
+            <i class="domain-icon" data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
             <span class="domain-number">02</span>
             <span class="domain-image-label">Analyser & décider</span>
           </div>
@@ -146,8 +148,9 @@
           </div>
         </article>
         <article class="domain-card">
-          <div class="domain-image">
-            <img src="https://images.pexels.com/photos/3869649/pexels-photo-3869649.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1000" alt="Femmes africaines collaborant au travail" loading="lazy">
+          <div class="domain-image domain-image-training" role="img" aria-label="Formation professionnelle">
+            <div class="domain-icon-ring"></div>
+            <i class="domain-icon" data-lucide="graduation-cap" aria-hidden="true"></i>
             <span class="domain-number">03</span>
             <span class="domain-image-label">Apprendre & certifier</span>
           </div>
@@ -158,8 +161,9 @@
           </div>
         </article>
         <article class="domain-card">
-          <div class="domain-image">
-            <img src="https://images.pexels.com/photos/7937764/pexels-photo-7937764.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1000" alt="Professionnel africain présentant un bien immobilier" loading="lazy">
+          <div class="domain-image domain-image-real-estate" role="img" aria-label="Gestion et valorisation immobilière">
+            <div class="domain-icon-ring"></div>
+            <i class="domain-icon" data-lucide="building-2" aria-hidden="true"></i>
             <span class="domain-number">04</span>
             <span class="domain-image-label">Gérer & valoriser</span>
           </div>
@@ -345,6 +349,6 @@
   <dialog class="request-modal appointment-modal" id="appointment-modal"><div class="modal-top"><span class="eyebrow">Réservation</span><button class="close-appointment" type="button" aria-label="Fermer le formulaire">×</button></div><h2>Planifiez votre<br><em>rendez-vous.</em></h2><form id="appointment-form"><div class="form-row"><label>Nom complet <input name="name" required autocomplete="name"></label><label>Téléphone / WhatsApp <input name="phone" required type="tel" autocomplete="tel" placeholder="+243..."></label></div><div class="form-row"><label>Email <input type="email" name="email" required autocomplete="email"></label><label>Organisation <input name="company" autocomplete="organization"></label></div><div class="form-row"><label>Service <select name="service" required><option value="" disabled selected>Choisir un service</option><option>Consultation entrepreneuriale</option><option>Audit et fiscalité</option><option>Formation professionnelle</option><option>Gestion immobilière</option><option>Montage d'offres et marchés</option></select></label><label>Format <select name="mode"><option>Présentiel</option><option>Visioconférence</option><option>Appel téléphonique</option></select></label></div><div class="form-row"><label>Date <input name="appointment_date" type="date" required></label><label>Heure <input name="appointment_time" type="time" required></label></div><label>Objet du rendez-vous <textarea name="message" rows="3" placeholder="Décrivez brièvement votre besoin."></textarea></label><button class="button button-dark submit-button" type="submit">Demander un rendez-vous <span>↗</span></button><p class="form-message" id="appointment-message" role="status"></p></form></dialog>
   <dialog class="request-modal" id="request-modal"><div class="modal-top"><span class="eyebrow">Nouvelle demande</span><button class="close-modal" type="button" aria-label="Fermer le formulaire">×</button></div><h2>Parlez-nous de<br><em>votre projet.</em></h2><form id="request-form"><div class="form-row"><label>Nom <input name="name" required placeholder="Votre nom"></label><label>Email <input type="email" name="email" required placeholder="vous@entreprise.com"></label></div><div class="form-row"><label>Entreprise <input name="company" placeholder="Entreprise ou projet"></label><label>Votre besoin <select name="service" required><option value="" selected disabled>Choisir un domaine</option><option>Accompagnement entrepreneurial</option><option>Audit et conseils fiscaux</option><option>Formation professionnelle</option><option>Gestion immobilière</option><option>Offres et marchés</option></select></label></div><label>Budget indicatif <select name="budget"><option>À discuter</option><option>Moins de 2 000 $</option><option>2 000 $ - 5 000 $</option><option>5 000 $ - 10 000 $</option><option>Plus de 10 000 $</option></select></label><label>Votre demande <textarea name="message" rows="3" placeholder="Décrivez brièvement votre besoin."></textarea></label><button class="button button-dark submit-button" type="submit">Envoyer la demande <span>↗</span></button><p class="form-message" id="form-message" role="status"></p></form></dialog>
   <div class="toast" id="toast" role="status"><span>✳</span><div><strong>Nouvelle demande reçue</strong><small>Un nouveau dossier vient d'arriver.</small></div></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.MCONSULTING_CONFIG = { supabaseUrl: '<%= process.env.SUPABASE_URL || "https://blpmtontzjsxhmbbziyg.supabase.co" %>', supabaseKey: '<%= process.env.SUPABASE_ANON_KEY || "" %>' };</script><script src="/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script><script>window.MCONSULTING_CONFIG = { supabaseUrl: '<%= process.env.SUPABASE_URL || "https://blpmtontzjsxhmbbziyg.supabase.co" %>', supabaseKey: '<%= process.env.SUPABASE_ANON_KEY || "" %>' }; if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });</script><script src="/app.js"></script>
 </body>
 </html>

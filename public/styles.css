@@ -232,11 +232,17 @@ body { color: #18263d; -webkit-font-smoothing: antialiased; }
 .domain-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .domain-card { overflow: hidden; border: 1px solid #e2e6eb; border-radius: 18px; background: #fff; box-shadow: 0 14px 38px rgba(23,43,76,.055); transition: transform .28s ease, box-shadow .28s ease; }
 .domain-card:hover { transform: translateY(-5px); box-shadow: 0 24px 48px rgba(23,43,76,.12); }
-.domain-image { position: relative; height: clamp(210px, 25vw, 330px); overflow: hidden; background: var(--navy); }
-.domain-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(13,30,53,.03) 30%, rgba(13,30,53,.68) 100%); }
-.domain-image img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.7,.2,1); }
-.domain-card:hover .domain-image img { transform: scale(1.045); }
-.domain-number, .domain-image-label { position: absolute; z-index: 1; color: #fff; }
+.domain-image { position: relative; display: grid; height: clamp(210px, 25vw, 330px); place-items: center; overflow: hidden; background: #17304f; }
+.domain-image::before { position: absolute; inset: 0; content: ''; opacity: .9; background: radial-gradient(circle at 68% 30%, rgba(255,255,255,.16), transparent 24%), linear-gradient(135deg, transparent 55%, rgba(217,250,91,.11)); }
+.domain-image::after { position: absolute; right: -55px; bottom: -95px; width: 210px; height: 210px; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; box-shadow: 0 0 0 38px rgba(255,255,255,.025), 0 0 0 76px rgba(255,255,255,.018); content: ''; }
+.domain-image-entrepreneurship { background: linear-gradient(145deg, #17304f 0%, #254c75 100%); }
+.domain-image-audit { background: linear-gradient(145deg, #273a55 0%, #52667d 100%); }
+.domain-image-training { background: linear-gradient(145deg, #29463f 0%, #527064 100%); }
+.domain-image-real-estate { background: linear-gradient(145deg, #5c492a 0%, #9a793c 100%); }
+.domain-icon-ring { position: absolute; width: 150px; height: 150px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; box-shadow: 0 0 0 18px rgba(255,255,255,.025), 0 0 0 36px rgba(255,255,255,.018); }
+.domain-icon { position: relative; z-index: 2; width: 82px; height: 82px; color: var(--acid); filter: drop-shadow(0 14px 18px rgba(0,0,0,.18)); transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+.domain-card:hover .domain-icon { transform: translateY(-6px) scale(1.06); }
+.domain-number, .domain-image-label { position: absolute; z-index: 3; color: #fff; }
 .domain-number { top: 18px; left: 18px; display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(255,255,255,.45); border-radius: 50%; background: rgba(20,43,76,.45); backdrop-filter: blur(8px); font: 11px var(--mono); }
 .domain-image-label { bottom: 19px; left: 22px; font-size: 19px; font-weight: 700; letter-spacing: -.03em; }
 .domain-copy { padding: 25px 26px 28px; }
